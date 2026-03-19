@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Momentum — Task & Journal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0c0c10;
+      --surface: #13131a;
+      --surface2: #1a1a24;
+      --border: #25252f;
+      --accent: #c8f060;
+      --accent2: #7b6ef6;
+      --text: #f0f0f5;
+      --muted: #6b6b80;
+      --danger: #ff5e5e;
+      --warn: #ffb340;
+      --success: #4ade80;
+      --font-head: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 220px;
+      min-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 28px 16px;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-family: var(--font-head);
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .logo-sub { font-size: 0.72rem; color: var(--muted); margin-bottom: 36px; letter-spacing: 0.5px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 4px;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+    }
+    .nav-item:hover { color: var(--text); background: var(--surface2); }
+    .nav-item.active { color: var(--accent); background: rgba(200,240,96,0.08); border-color: rgba(200,240,96,0.15); }
+    .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+    .sidebar-bottom { margin-top: auto; }
+    .stat-chip {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 12px; background: var(--surface2); border-radius: 8px;
+      margin-bottom: 6px; font-size: 0.78rem;
+    }
+    .stat-chip .label { color: var(--muted); }
+    .stat-chip .val { font-weight: 700; color: var(--accent); font-family: var(--font-head); }
+
+    /* ── MAIN ── */
+    .main { margin-left: 220px; flex: 1; padding: 36px 40px; min-height: 100vh; }
+
+    .page-header {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      margin-bottom: 28px;
+    }
+    .page-title { font-family: var(--font-head); font-size: 2rem; font-weight: 800; color: var(--text); }
+    .page-sub { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── BUTTON ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px; border-radius: 8px; font-size: 0.85rem;
+      font-weight: 600; cursor: pointer; border: none;
+      font-family: var(--font-body); transition: all 0.15s;
+    }
+    .btn-primary { background: var(--accent); color: #0c0c10; }
+    .btn-primary:hover { background: #d4f572; transform: translateY(-1px); }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+    .btn-danger { background: rgba(255,94,94,0.12); color: var(--danger); border: 1px solid rgba(255,94,94,0.2); }
+    .btn-danger:hover { background: rgba(255,94,94,0.2); }
+    .btn-sm { padding: 5px 12px; font-size: 0.78rem; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px;
+      transition: border-color 0.15s;
+    }
+    .card:hover { border-color: #35354a; }
+
+    /* ── TASKS GRID ── */
+    .tasks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .task-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px; position: relative;
+      transition: all 0.2s;
+    }
+    .task-card:hover { border-color: #35354a; transform: translateY(-2px); }
+    .task-card.completed { opacity: 0.65; }
+    .task-title { font-family: var(--font-head); font-size: 1rem; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+    .task-desc { font-size: 0.82rem; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
+    .task-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600;
+    }
+    .badge-pending { background: rgba(255,179,64,0.12); color: var(--warn); }
+    .badge-in_progress { background: rgba(123,110,246,0.15); color: var(--accent2); }
+    .badge-completed { background: rgba(74,222,128,0.12); color: var(--success); }
+    .badge-overdue { background: rgba(255,94,94,0.12); color: var(--danger); }
+    .deadline-text { font-size: 0.75rem; color: var(--muted); }
+    .deadline-text.overdue { color: var(--danger); }
+
+    .task-images { display: flex; gap: 8px; margin-top: 12px; }
+    .task-img-wrap {
+      position: relative; width: 80px; height: 64px;
+      border-radius: 8px; overflow: hidden; border: 1px solid var(--border);
+    }
+    .task-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .img-label {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.6); font-size: 0.6rem; text-align: center;
+      padding: 2px; color: #fff; font-weight: 600;
+    }
+    .task-actions { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+
+    /* ── DEADLINE LIST ── */
+    .deadline-item {
+      display: flex; align-items: center; gap: 16px;
+      padding: 14px 18px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 12px;
+      margin-bottom: 10px; transition: all 0.15s;
+    }
+    .deadline-item:hover { border-color: #35354a; }
+    .dl-number { font-family: var(--font-head); font-size: 1.4rem; font-weight: 800; color: var(--border); min-width: 32px; text-align: center; }
+    .dl-info { flex: 1; }
+    .dl-title { font-weight: 600; font-size: 0.92rem; }
+    .dl-deadline { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .dl-deadline.overdue { color: var(--danger); }
+    .progress-bar-wrap { width: 100px; }
+    .progress-bar-bg { background: var(--border); border-radius: 4px; height: 4px; }
+    .progress-bar { height: 4px; border-radius: 4px; background: var(--accent); }
+
+    /* ── JOURNAL ── */
+    .journal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    .journal-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .journal-card:hover { border-color: #35354a; transform: translateY(-2px); }
+    .journal-mood { font-size: 1.4rem; margin-bottom: 8px; }
+    .journal-title { font-family: var(--font-head); font-weight: 700; font-size: 1rem; margin-bottom: 6px; }
+    .journal-preview { font-size: 0.82rem; color: var(--muted); line-height: 1.5; margin-bottom: 10px; white-space: pre-wrap; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+    .journal-footer { display: flex; justify-content: space-between; align-items: center; }
+    .journal-date { font-size: 0.73rem; color: var(--muted); }
+    .journal-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+    .tag-chip { background: var(--surface2); color: var(--muted); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 20px; backdrop-filter: blur(4px);
+    }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px; width: 100%; max-width: 520px;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-title { font-family: var(--font-head); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px; }
+
+    /* ── FORM ── */
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    input[type=text], input[type=datetime-local], textarea, select {
+      width: 100%; padding: 10px 12px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-family: var(--font-body);
+      font-size: 0.88rem; outline: none; transition: border-color 0.15s;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent2); }
+    textarea { resize: vertical; min-height: 100px; line-height: 1.5; }
+
+    .file-drop {
+      border: 2px dashed var(--border); border-radius: 8px;
+      padding: 20px; text-align: center; cursor: pointer;
+      color: var(--muted); font-size: 0.82rem; transition: all 0.15s;
+    }
+    .file-drop:hover { border-color: var(--accent2); color: var(--text); }
+    .file-drop input { display: none; }
+
+    .preview-img {
+      width: 100%; max-height: 180px; object-fit: cover;
+      border-radius: 8px; margin-top: 8px;
+    }
+
+    .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center; padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: 0.5; }
+    .empty-text { font-size: 0.9rem; }
+
+    /* ── MOOD SELECTOR ── */
+    .mood-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+    .mood-btn {
+      padding: 6px 14px; border-radius: 20px; cursor: pointer;
+      font-size: 0.82rem; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); transition: all 0.15s;
+    }
+    .mood-btn.selected { background: var(--surface2); border-color: var(--accent2); color: var(--text); }
+
+    /* ── STATUS SELECT ── */
+    .status-select { display: flex; gap: 8px; }
+    .status-btn {
+      flex: 1; padding: 7px 4px; border-radius: 8px; cursor: pointer;
+      font-size: 0.75rem; font-weight: 600; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); text-align: center;
+      transition: all 0.15s; font-family: var(--font-body);
+    }
+    .status-btn.sel-pending { border-color: var(--warn); color: var(--warn); background: rgba(255,179,64,0.08); }
+    .status-btn.sel-in_progress { border-color: var(--accent2); color: var(--accent2); background: rgba(123,110,246,0.08); }
+    .status-btn.sel-completed { border-color: var(--success); color: var(--success); background: rgba(74,222,128,0.08); }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .loading { text-align: center; padding: 60px; color: var(--muted); font-size: 0.9rem; }
+    .error-msg { color: var(--danger); font-size: 0.82rem; margin-top: 6px; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-in { animation: fadeIn 0.3s ease forwards; }
+  </style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const API = "http://localhost:8000";
+
+const MOODS = [
+  { key: "happy", emoji: "😊" },
+  { key: "motivated", emoji: "🔥" },
+  { key: "neutral", emoji: "😐" },
+  { key: "tired", emoji: "😴" },
+  { key: "frustrated", emoji: "😤" },
+];
+
+function moodEmoji(key) {
+  return MOODS.find(m => m.key === key)?.emoji || "😐";
+}
+
+function formatDeadline(dt) {
+  if (!dt) return null;
+  const d = new Date(dt);
+  const now = new Date();
+  const diff = d - now;
+  if (diff < 0) return { text: "Overdue", overdue: true };
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return { text: "Due today", overdue: false };
+  if (days === 1) return { text: "Due tomorrow", overdue: false };
+  return { text: `Due in ${days} days`, overdue: false };
+}
+
+function formatDate(dt) {
+  if (!dt) return "";
+  return new Date(dt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+}
+
+// ── API HELPERS ────────────────────────────────────────────────────────────
+
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(API + path, opts);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+// ── TASK FORM MODAL ────────────────────────────────────────────────────────
+
+function TaskModal({ task, onClose, onSaved }) {
+  const isEdit = !!task;
+  const [title, setTitle] = useState(task?.title || "");
+  const [desc, setDesc] = useState(task?.description || "");
+  const [deadline, setDeadline] = useState(
+    task?.deadline ? new Date(task.deadline).toISOString().slice(0,16) : ""
+  );
+  const [status, setStatus] = useState(task?.status || "pending");
+  const [beforeFile, setBeforeFile] = useState(null);
+  const [afterFile, setAfterFile] = useState(null);
+  const [beforePreview, setBeforePreview] = useState(task?.before_image ? API + task.before_image : null);
+  const [afterPreview, setAfterPreview] = useState(task?.after_image ? API + task.after_image : null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  function handleFile(e, type) {
+    const f = e.target.files[0];
+    if (!f) return;
+    const url = URL.createObjectURL(f);
+    if (type === "before") { setBeforeFile(f); setBeforePreview(url); }
+    else { setAfterFile(f); setAfterPreview(url); }
+  }
+
+  async function handleSubmit() {
+    if (!title.trim()) { setError("Title is required"); return; }
+    setSaving(true); setError("");
+    const fd = new FormData();
+    fd.append("title", title);
+    fd.append("description", desc);
+    if (deadline) fd.append("deadline", deadline);
+    if (isEdit) fd.append("status", status);
+    if (beforeFile) fd.append("before_image", beforeFile);
+    if (afterFile) fd.append("after_image", afterFile);
+    try {
+      if (isEdit) {
+        await fetch(`${API}/tasks/${task.id}`, { method: "PATCH", body: fd });
+      } else {
+        await fetch(`${API}/tasks`, { method: "POST", body: fd });
+      }
+      onSaved();
+    } catch(e) { setError("Failed to save task"); }
+    finally { setSaving(false); }
+  }
+
+  const statusOptions = ["pending", "in_progress", "completed"];
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal animate-in">
+        <div className="modal-title">{isEdit ? "Edit Task" : "New Task"}</div>
+
+        <div className="form-group">
+          <label>Title</label>
+          <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="What needs to be done?" />
+        </div>
+
+        <div className="form-group">
+          <label>Description</label>
+          <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="Add details, steps, notes..." />
+        </div>
+
+        <div className="form-group">
+          <label>Deadline</label>
+          <input type="datetime-local" value={deadline} onChange={e => setDeadline(e.target.value)} />
+        </div>
+
+        {isEdit && (
+          <div className="form-group">
+            <label>Status</label>
+            <div className="status-select">
+              {statusOptions.map(s => (
+                <button key={s} className={`status-btn ${status === s ? `sel-${s}` : ""}`}
+                  onClick={() => setStatus(s)}>
+                  {s === "pending" ? "⏳ Pending" : s === "in_progress" ? "⚡ In Progress" : "✅ Done"}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="form-group">
+          <label>Before Photo</label>
+          <label className="file-drop">
+            <input type="file" accept="image/*" onChange={e => handleFile(e, "before")} />
+            {beforePreview ? <img src={beforePreview} className="preview-img" alt="before" /> : <span>📷 Click to attach before photo</span>}
+          </label>
+        </div>
+
+        {isEdit && (
+          <div className="form-group">
+            <label>After Photo</label>
+            <label className="file-drop">
+              <input type="file" accept="image/*" onChange={e => handleFile(e, "after")} />
+              {afterPreview ? <img src={afterPreview} className="preview-img" alt="after" /> : <span>📷 Click to attach after photo</span>}
+            </label>
+          </div>
+        )}
+
+        {error && <div className="error-msg">{error}</div>}
+
+        <div className="form-actions">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
+            {saving ? "Saving..." : isEdit ? "Update Task" : "Create Task"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── JOURNAL MODAL ──────────────────────────────────────────────────────────
+
+function JournalModal({ entry, onClose, onSaved }) {
+  const isEdit = !!entry;
+  const [title, setTitle] = useState(entry?.title || "");
+  const [content, setContent] = useState(entry?.content || "");
+  const [mood, setMood] = useState(entry?.mood || "neutral");
+  const [tags, setTags] = useState(entry?.tags || "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit() {
+    if (!title.trim()) { setError("Title is required"); return; }
+    setSaving(true); setError("");
+    const body = { title, content, mood, tags };
+    try {
+      if (isEdit) {
+        await apiFetch(`/journal/${entry.id}`, {
+          method: "PATCH", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+      } else {
+        await apiFetch("/journal", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+      }
+      onSaved();
+    } catch(e) { setError("Failed to save entry"); }
+    finally { setSaving(false); }
+  }
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal animate-in" style={{maxWidth: 600}}>
+        <div className="modal-title">{isEdit ? "Edit Entry" : "New Journal Entry"}</div>
+
+        <div className="form-group">
+          <label>Title</label>
+          <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="What's on your mind?" />
+        </div>
+
+        <div className="form-group">
+          <label>Mood</label>
+          <div className="mood-picker">
+            {MOODS.map(m => (
+              <button key={m.key} className={`mood-btn ${mood === m.key ? "selected" : ""}`}
+                onClick={() => setMood(m.key)}>
+                {m.emoji} {m.key}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label>Write freely</label>
+          <textarea style={{minHeight: 180}} value={content} onChange={e => setContent(e.target.value)}
+            placeholder="Express yourself — thoughts, reflections, wins, struggles..." />
+        </div>
+
+        <div className="form-group">
+          <label>Tags (comma-separated)</label>
+          <input type="text" value={tags} onChange={e => setTags(e.target.value)} placeholder="learning, health, work, habits..." />
+        </div>
+
+        {error && <div className="error-msg">{error}</div>}
+
+        <div className="form-actions">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
+            {saving ? "Saving..." : isEdit ? "Update Entry" : "Save Entry"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── TASKS PAGE ─────────────────────────────────────────────────────────────
+
+function TasksPage() {
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editTask, setEditTask] = useState(null);
+
+  async function load() {
+    setLoading(true);
+    try { setTasks(await apiFetch("/tasks")); } catch(e) {}
+    setLoading(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  async function deleteTask(id) {
+    if (!confirm("Delete this task?")) return;
+    await apiFetch(`/tasks/${id}`, { method: "DELETE" });
+    load();
+  }
+
+  if (loading) return <div className="loading">Loading tasks...</div>;
+
+  return (
+    <div className="animate-in">
+      <div className="page-header">
+        <div>
+          <div className="page-title">Tasks</div>
+          <div className="page-sub">{tasks.length} task{tasks.length !== 1 ? "s" : ""} total</div>
+        </div>
+        <button className="btn btn-primary" onClick={() => { setEditTask(null); setShowModal(true); }}>
+          + New Task
+        </button>
+      </div>
+
+      {tasks.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-icon">📋</div>
+          <div className="empty-text">No tasks yet. Create your first one!</div>
+        </div>
+      ) : (
+        <div className="tasks-grid">
+          {tasks.map(task => {
+            const dl = formatDeadline(task.deadline);
+            return (
+              <div key={task.id} className={`task-card ${task.status === "completed" ? "completed" : ""}`}>
+                <div className="task-title">{task.title}</div>
+                {task.description && <div className="task-desc">{task.description}</div>}
+                <div className="task-meta">
+                  <span className={`badge badge-${dl?.overdue && task.status !== "completed" ? "overdue" : task.status}`}>
+                    {dl?.overdue && task.status !== "completed" ? "⚠ Overdue" :
+                     task.status === "pending" ? "⏳ Pending" :
+                     task.status === "in_progress" ? "⚡ In Progress" : "✅ Done"}
+                  </span>
+                  {dl && <span className={`deadline-text ${dl.overdue ? "overdue" : ""}`}>{dl.text}</span>}
+                </div>
+                {(task.before_image || task.after_image) && (
+                  <div className="task-images">
+                    {task.before_image && (
+                      <div className="task-img-wrap">
+                        <img src={API + task.before_image} alt="before" />
+                        <div className="img-label">BEFORE</div>
+                      </div>
+                    )}
+                    {task.after_image && (
+                      <div className="task-img-wrap">
+                        <img src={API + task.after_image} alt="after" />
+                        <div className="img-label">AFTER</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div className="task-actions">
+                  <button className="btn btn-ghost btn-sm" onClick={() => { setEditTask(task); setShowModal(true); }}>Edit</button>
+                  <button className="btn btn-danger btn-sm" onClick={() => deleteTask(task.id)}>Delete</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {showModal && (
+        <TaskModal
+          task={editTask}
+          onClose={() => setShowModal(false)}
+          onSaved={() => { setShowModal(false); load(); }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── DEADLINE PAGE ──────────────────────────────────────────────────────────
+
+function DeadlinePage() {
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  async function load() {
+    setLoading(true);
+    try { setTasks(await apiFetch("/tasks/by-deadline")); } catch(e) {}
+    setLoading(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  if (loading) return <div className="loading">Loading...</div>;
+
+  const incomplete = tasks.filter(t => t.status !== "completed");
+  const complete = tasks.filter(t => t.status === "completed");
+
+  function renderList(list, label) {
+    if (list.length === 0) return null;
+    return (
+      <>
+        <div style={{fontSize:"0.75rem",color:"var(--muted)",textTransform:"uppercase",letterSpacing:"1px",marginBottom:10,marginTop:20}}>{label}</div>
+        {list.map((task, i) => {
+          const dl = formatDeadline(task.deadline);
+          return (
+            <div key={task.id} className="deadline-item">
+              <div className="dl-number">{String(i+1).padStart(2,"0")}</div>
+              <div className="dl-info">
+                <div className="dl-title">{task.title}</div>
+                <div className={`dl-deadline ${dl?.overdue ? "overdue" : ""}`}>
+                  {task.deadline ? formatDate(task.deadline) : "No deadline"}{dl ? ` — ${dl.text}` : ""}
+                </div>
+              </div>
+              <span className={`badge badge-${dl?.overdue && task.status !== "completed" ? "overdue" : task.status}`}>
+                {task.status === "completed" ? "✅" : dl?.overdue ? "⚠" : "⏳"}
+              </span>
+            </div>
+          );
+        })}
+      </>
+    );
+  }
+
+  return (
+    <div className="animate-in">
+      <div className="page-header">
+        <div>
+          <div className="page-title">Deadline Curator</div>
+          <div className="page-sub">Tasks sorted by commitment priority</div>
+        </div>
+      </div>
+      {tasks.length === 0 ? (
+        <div className="empty-state"><div className="empty-icon">📅</div><div className="empty-text">No tasks yet.</div></div>
+      ) : (
+        <>
+          {renderList(incomplete, "Upcoming & Active")}
+          {renderList(complete, "Completed")}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── JOURNAL PAGE ───────────────────────────────────────────────────────────
+
+function JournalPage() {
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editEntry, setEditEntry] = useState(null);
+  const [viewEntry, setViewEntry] = useState(null);
+
+  async function load() {
+    setLoading(true);
+    try { setEntries(await apiFetch("/journal")); } catch(e) {}
+    setLoading(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  async function deleteEntry(id) {
+    if (!confirm("Delete this entry?")) return;
+    await apiFetch(`/journal/${id}`, { method: "DELETE" });
+    load();
+  }
+
+  if (loading) return <div className="loading">Loading journal...</div>;
+
+  return (
+    <div className="animate-in">
+      <div className="page-header">
+        <div>
+          <div className="page-title">Journal</div>
+          <div className="page-sub">{entries.length} entr{entries.length !== 1 ? "ies" : "y"}</div>
+        </div>
+        <button className="btn btn-primary" onClick={() => { setEditEntry(null); setShowModal(true); }}>
+          + New Entry
+        </button>
+      </div>
+
+      {entries.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-icon">📓</div>
+          <div className="empty-text">Your journal is empty. Start writing!</div>
+        </div>
+      ) : (
+        <div className="journal-grid">
+          {entries.map(entry => (
+            <div key={entry.id} className="journal-card" onClick={() => setViewEntry(entry)}>
+              <div className="journal-mood">{moodEmoji(entry.mood)}</div>
+              <div className="journal-title">{entry.title}</div>
+              <div className="journal-preview">{entry.content}</div>
+              <div className="journal-footer">
+                <div className="journal-date">{formatDate(entry.created_at)}</div>
+                <div className="journal-tags">
+                  {(entry.tags || "").split(",").filter(Boolean).slice(0,3).map((t,i) => (
+                    <span key={i} className="tag-chip">{t.trim()}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {viewEntry && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setViewEntry(null)}>
+          <div className="modal animate-in" style={{maxWidth:600}}>
+            <div style={{fontSize:"2rem",marginBottom:8}}>{moodEmoji(viewEntry.mood)}</div>
+            <div className="modal-title">{viewEntry.title}</div>
+            <div style={{color:"var(--muted)",fontSize:"0.78rem",marginBottom:16}}>{formatDate(viewEntry.created_at)}</div>
+            <div style={{whiteSpace:"pre-wrap",fontSize:"0.92rem",lineHeight:1.7,color:"var(--text)",marginBottom:20}}>{viewEntry.content}</div>
+            {viewEntry.tags && (
+              <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:20}}>
+                {viewEntry.tags.split(",").filter(Boolean).map((t,i) => (
+                  <span key={i} className="tag-chip">{t.trim()}</span>
+                ))}
+              </div>
+            )}
+            <div className="form-actions">
+              <button className="btn btn-danger btn-sm" onClick={() => { deleteEntry(viewEntry.id); setViewEntry(null); }}>Delete</button>
+              <button className="btn btn-ghost" onClick={() => { setEditEntry(viewEntry); setViewEntry(null); setShowModal(true); }}>Edit</button>
+              <button className="btn btn-primary" onClick={() => setViewEntry(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showModal && (
+        <JournalModal
+          entry={editEntry}
+          onClose={() => setShowModal(false)}
+          onSaved={() => { setShowModal(false); load(); }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── DASHBOARD PAGE ─────────────────────────────────────────────────────────
+
+function DashboardPage({ onNavigate }) {
+  const [stats, setStats] = useState(null);
+  const QUOTES = [
+    "Small steps every day lead to big change.",
+    "Start where you are. Use what you have. Do what you can.",
+    "Done is better than perfect.",
+    "You don't have to be great to start, but you have to start to be great.",
+    "Progress, not perfection.",
+  ];
+  const quote = QUOTES[new Date().getDay() % QUOTES.length];
+
+  useEffect(() => {
+    apiFetch("/stats").then(setStats).catch(() => {});
+  }, []);
+
+  return (
+    <div className="animate-in">
+      <div className="page-header">
+        <div>
+          <div className="page-title">Dashboard</div>
+          <div className="page-sub">Your momentum at a glance</div>
+        </div>
+      </div>
+
+      <div className="card" style={{marginBottom:20,borderColor:"rgba(200,240,96,0.2)",background:"rgba(200,240,96,0.05)"}}>
+        <div style={{fontSize:"0.72rem",color:"var(--accent)",textTransform:"uppercase",letterSpacing:"1px",marginBottom:6}}>Today's Spark</div>
+        <div style={{fontFamily:"var(--font-head)",fontSize:"1.1rem",fontWeight:700,color:"var(--text)",lineHeight:1.4}}>{quote}</div>
+      </div>
+
+      {stats && (
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:12,marginBottom:24}}>
+          {[
+            { label: "Total Tasks", val: stats.total_tasks, color: "var(--text)" },
+            { label: "Completed", val: stats.completed, color: "var(--success)" },
+            { label: "In Progress", val: stats.in_progress, color: "var(--accent2)" },
+            { label: "Overdue", val: stats.overdue, color: "var(--danger)" },
+            { label: "Completion", val: stats.completion_rate + "%", color: "var(--accent)" },
+            { label: "Journal Entries", val: stats.journal_entries, color: "var(--text)" },
+          ].map(s => (
+            <div key={s.label} className="card" style={{textAlign:"center"}}>
+              <div style={{fontFamily:"var(--font-head)",fontSize:"2rem",fontWeight:800,color:s.color}}>{s.val}</div>
+              <div style={{fontSize:"0.75rem",color:"var(--muted)",marginTop:4}}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+        <div className="card" style={{cursor:"pointer"}} onClick={() => onNavigate("tasks")}>
+          <div style={{fontSize:"1.8rem",marginBottom:8}}>📋</div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:700,marginBottom:4}}>Tasks</div>
+          <div style={{fontSize:"0.82rem",color:"var(--muted)"}}>Create and manage your to-dos with photos and deadlines.</div>
+        </div>
+        <div className="card" style={{cursor:"pointer"}} onClick={() => onNavigate("deadline")}>
+          <div style={{fontSize:"1.8rem",marginBottom:8}}>📅</div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:700,marginBottom:4}}>Deadlines</div>
+          <div style={{fontSize:"0.82rem",color:"var(--muted)"}}>See all tasks sorted by urgency and commitment.</div>
+        </div>
+        <div className="card" style={{cursor:"pointer"}} onClick={() => onNavigate("journal")}>
+          <div style={{fontSize:"1.8rem",marginBottom:8}}>📓</div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:700,marginBottom:4}}>Journal</div>
+          <div style={{fontSize:"0.82rem",color:"var(--muted)"}}>Reflect, express, and track your personal growth.</div>
+        </div>
+        <div className="card" style={{background:"rgba(200,240,96,0.04)",borderColor:"rgba(200,240,96,0.15)"}}>
+          <div style={{fontSize:"1.8rem",marginBottom:8}}>💡</div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:700,marginBottom:4}}>Tip</div>
+          <div style={{fontSize:"0.82rem",color:"var(--muted)"}}>Attach a "before" photo when creating a task. Seeing the after makes completion feel incredible.</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── APP ────────────────────────────────────────────────────────────────────
+
+function App() {
+  const [page, setPage] = useState("dashboard");
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    apiFetch("/stats").then(setStats).catch(() => {});
+  }, [page]);
+
+  const navItems = [
+    { id: "dashboard", icon: "⚡", label: "Dashboard" },
+    { id: "tasks", icon: "📋", label: "Tasks" },
+    { id: "deadline", icon: "📅", label: "Deadlines" },
+    { id: "journal", icon: "📓", label: "Journal" },
+  ];
+
+  return (
+    <>
+      <nav className="sidebar">
+        <div className="logo">Momentum</div>
+        <div className="logo-sub">Task & Journal App</div>
+        {navItems.map(n => (
+          <div key={n.id} className={`nav-item ${page === n.id ? "active" : ""}`} onClick={() => setPage(n.id)}>
+            <span className="nav-icon">{n.icon}</span> {n.label}
+          </div>
+        ))}
+        <div className="sidebar-bottom">
+          {stats && (
+            <>
+              <div className="stat-chip"><span className="label">Done</span><span className="val">{stats.completed}/{stats.total_tasks}</span></div>
+              <div className="stat-chip"><span className="label">Overdue</span><span className="val" style={{color: stats.overdue > 0 ? "var(--danger)" : "var(--success)"}}>{stats.overdue}</span></div>
+            </>
+          )}
+        </div>
+      </nav>
+      <main className="main">
+        {page === "dashboard" && <DashboardPage onNavigate={setPage} />}
+        {page === "tasks" && <TasksPage />}
+        {page === "deadline" && <DeadlinePage />}
+        {page === "journal" && <JournalPage />}
+      </main>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
